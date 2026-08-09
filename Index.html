@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>password_checker.py -- web edition</title>
+<meta name="description" content="Browser version of a Python CLI password strength checker. Checks length, character variety, pattern detection, entropy, and real breach data via Have I Been Pwned.">
+<style>
+  :root {
+    --bg: #050505;
+    --panel: #0d0d0d;
+    --panel-border: #232323;
+    --fg: #f5f5f5;
+    --muted: #6b6b6b;
+    --danger: #ff3b3b;
+    --warn: #f5c542;
+    --accent: #39ff88;
+  }
+
+  * { box-sizing: border-box; }
+
+  @font-face {
+    font-family: 'JBM';
+    src: local('JetBrains Mono');
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'JetBrains Mono', 'JBM', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 28px 14px 60px;
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 640px;
+  }
+
+  .backlink {
+    display: block;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    margin-bottom: 14px;
+    letter-spacing: 0.02em;
+  }
+  .backlink:hover { color: var(--fg); }
+  .backlink::before { content: "< "; }
+
+  .terminal {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.02), 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  .titlebar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: #111111;
+    border-bottom: 1px solid var(--panel-border);
+  }
+
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: #333; }
+  .titlebar-text {
+    margin-left: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .screen {
+    padding: 20px 18px 24px;
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  .line { margin: 0 0 2px; white-space: pre-wrap; word-break: break-word; }
+  .muted { color: var(--muted); }
+  .accent { color: var(--accent); }
+  .prompt-sym { color: var(--accent); }
+
+  .intro { margin-bottom: 18px; }
+
+  form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 4px;
+  }
+
+  .prompt-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    background: #000;
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+  .prompt-row:focus-within { border-color: var(--accent); }
+
+  input[type="text"], input[type="password"] {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--fg);
+    font-family: inherit;
+    font-size: 15px;
+    min-width: 0;
+  }
+  input::placeholder { color: var(--muted); }
+
+  .icon-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 2px 4px;
+    font-family: inherit;
+  }
+  .icon-btn:hover { color: var(--fg); }
+
+  button.run {
+    background: var(--accent);
+    color: #041b0d;
+    border: none;
+    border-radius: 6px;
+    padding: 11px 16px;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+  button.run:active { transform: translateY(1px); }
+  button.run:disabled { opacity: 0.5; cursor: default; }
+
+  .hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin: 10px 0 0;
+  }
+
+  #output { margin-top: 18px; }
+
+  .result-block {
+    border-top: 1px dashed var(--panel-border);
+    padding-top: 14px;
+    margin-top: 14px;
+    animation: appear 0.25s ease both;
+  }
+  @keyframes appear {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .result-block .line {
+    opacity: 0;
+    animation: lineIn 0.3s ease forwards;
+  }
+  @keyframes lineIn {
+    from { opacity: 0; transform: translateY(3px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .strength-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .strength-label { font-weight: 700; font-size: 15px; }
+  .s-0, .s-1 { color: var(--danger); }
+  .s-2, .s-3 { color: var(--warn); }
+  .s-4, .s-5 { color: var(--accent); }
+
+  .bar {
+    font-size: 15px;
+    letter-spacing: 1px;
+  }
+
+  .suggestions { margin-top: 6px; }
+  .suggestions .line { padding-left: 18px; position: relative; }
+  .suggestions .line::before {
+    content: "-";
+    position: absolute;
+    left: 4px;
+    color: var(--muted);
+  }
+
+  .breach-ok { color: var(--accent); }
+  .breach-bad { color: var(--danger); font-weight: 700; }
+  .breach-unknown { color: var(--muted); }
+
+  .cursor {
+    display: inline-block;
+    width: 8px;
+    height: 14px;
+    background: var(--accent);
+    vertical-align: -2px;
+    animation: blink 1s step-start infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  footer {
+    margin-top: 18px;
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.7;
+  }
+  footer a { color: var(--muted); }
+  footer a:hover { color: var(--fg); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cursor { animation: none; opacity: 1; }
+    .result-block, .result-block .line { animation: none; opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="backlink" href="https://github.com/jomawii/password-strength-checker">back to source (GitHub)</a>
+
+  <div class="terminal">
+    <div class="titlebar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="titlebar-text">jomawii@web:~ password_checker.py</span>
+    </div>
+    <div class="screen">
+      <div class="intro">
+        <div class="line muted">$ whoami</div>
+        <div class="line">&gt; Password Strength Checker <span class="muted">(web edition)</span></div>
+        <div class="line muted" style="margin-top:8px;">Nothing you type here is stored, logged, or sent anywhere</div>
+        <div class="line muted">except an optional 5-character hash prefix, for the breach check below.</div>
+      </div>
+
+      <form id="pwForm" autocomplete="off">
+        <div class="prompt-row">
+          <span class="prompt-sym">$</span>
+          <input type="password" id="pwInput" placeholder="type a password to check" aria-label="Password to check" />
+          <button type="button" class="icon-btn" id="toggleVis" aria-label="Show password">show</button>
+        </div>
+        <button type="submit" class="run" id="runBtn">Check</button>
+      </form>
+      <div class="hint">Runs the same checks as the CLI: length, variety, patterns, leetspeak, wordlist, entropy, and a live breach check.</div>
+
+      <div id="output"></div>
+    </div>
+  </div>
+
+  <footer>
+    Same logic as the Python CLI version -- <a href="https://github.com/jomawii/password-strength-checker">source + tests on GitHub</a><br>
+    Breach check via <a href="https://haveibeenpwned.com/">Have I Been Pwned</a> (k-anonymity -- your password never leaves this page)
+  </footer>
+</div>
+
+<script>
+const COMMON_PASSWORDS = new Set(["000000", "0123456789", "101010", "102030", "1029384756", "110110", "1111", "111111", "11111111", "111222", "112233", "1122334455", "121212", "121314", "123123", "123321", "1234", "12345", "123456", "1234567", "12345678", "123456789", "1234567890", "123654", "123qwe", "131313", "135790", "147258", "147258369", "159357", "159753", "159951", "178368", "1a2b3c4d", "1q2w3e", "1q2w3e4r", "1qaz1qaz", "1qaz2wsx", "1qazxsw2", "1qazzaq1", "2000", "222222", "2222222222", "232323", "242424", "262626", "282828", "30303", "314159", "333333", "444444", "54321", "55555", "555555", "654321", "666666", "6969", "696969", "777777", "7777777", "789456", "789456123", "88888888", "90210", "987654", "987654321", "9876543210", "99999999", "a1b2c3", "aaaa1111", "aaaaaa", "abc123", "abcd1234", "abcdef", "abcdefg", "abcdefgh", "access", "admin", "admin123", "amanda", "andrew", "asdf1234", "asdfgh", "asdfghjkl", "ashley", "austin", "azerty", "bailey", "banana", "bandit", "barney", "baseball", "baseball1", "basketball", "batman", "biden", "bigdog", "biteme", "blahblah", "bond007", "booboo", "booger", "brandon", "brandy", "buddy", "bulldog", "bullshit", "bunny", "buster", "camaro", "cameron", "cancer", "carlos", "casper", "changeme", "charlie", "cheese", "cheese1", "chelsea", "chester", "chicago", "chicken", "chocolate", "computer", "cookie", "cool", "corvette", "cowboy", "cowboys", "crystal", "cupcake", "dallas", "daniel", "danielle", "default", "diamond", "dolphin", "dolphins", "donald", "donkey", "dragon", "dragon1", "dreams", "eagle1", "eagles", "edward", "elephant", "enter", "extreme", "falcon", "family", "fender", "ferrari", "firebird", "flower", "flyers", "football", "football1", "football123", "forever", "freddy", "freedom", "friends", "gandalf", "gateway", "gemini", "george", "george1", "ginger", "ginger1", "gizmo", "golden", "golfer", "gordon", "graduate", "green", "guest", "guitar", "gunner", "hammer", "hannah", "happy", "harley", "harley1", "heather", "hello", "hello123", "hersheys", "hockey", "hockey1", "hoops", "horny", "hotdog", "hunter", "hunter1", "iceman", "iloveyou", "iloveyou1", "internet", "iron", "jackson", "jaguar", "jasmine", "jasper", "jennifer", "jennifer1", "jessica", "johnny", "joker", "jordan", "jordan1", "joseph", "josh", "joshua", "justin", "killer", "klaster", "knight", "ladybug", "lakers", "lasvegas", "leather", "legend", "letme1n", "letmein", "letmein1", "lets", "liverpool", "login", "london", "love", "loveme", "loveyou", "lucky", "madison", "maggie", "maggie1", "magic", "magnum", "marine", "mario", "market", "marlboro", "martin", "master", "master1", "matrix", "matthew", "matthew1", "maverick", "maxwell", "mercedes", "merlin", "metallica", "michael", "michelle", "midnight", "mike", "miller", "mobilemail", "mom", "money", "monitor", "monitoring", "monkey", "monkey1", "monster", "montana", "moon", "morgan", "moscow", "mountain", "muffin", "music", "mustang", "mustang1", "naruto", "nascar", "nathan", "ncc1701", "newyork", "nicole", "nicole1", "ninja", "nintendo", "nirvana", "oliver", "online", "orange", "outlaw", "p@ssw0rd", "packers", "panther", "panties", "paris", "parker", "pass", "passw0rd", "password", "password1", "password123", "password2", "patches", "patrick", "peaches", "peanut", "pepper", "pepper1", "phantom", "phoenix", "player", "please", "pokemon", "police", "pookie", "porsche", "prince", "princess", "princess1", "puppy", "purple", "q1w2e3r4", "qazwsx", "qazwsxedc", "qazxsw", "qwe123", "qwer1234", "qwerasdf", "qwerty", "qwerty1", "qwerty12", "qwerty123", "qwerty1234", "qwerty2", "qwertyuiop", "rabbit", "racing", "raiders", "rainbow", "ranger", "ranger1", "rangers", "raven", "reddog", "redskins", "richard", "robert", "rocket", "rockstar", "rocky", "roger", "rush2112", "sailor", "sammy", "samsung", "sandra", "saturn", "scooby", "scooter", "scorpio", "scorpion", "scott", "secret", "sexy", "shadow", "shadow1", "shadow123", "shannon", "shark", "sierra", "silver", "skippy", "slayer", "sled", "smokey", "snoopy", "soccer", "soccer1", "spanky", "sparky", "spider", "spike", "sports", "sprite", "stanley", "star", "startrek", "starwars", "steelers", "steven", "sticky", "stupid", "success", "summer", "summer1", "sunshine", "sunshine1", "sunshine123", "super", "superman", "superstar", "swimming", "sydney", "taylor", "taylor1", "teamo", "temp123", "temp1234", "tennis", "test123", "tester", "testing", "testtest", "texas", "thomas", "thomas1", "thunder", "thunder1", "tiffany", "tiger", "tigers", "tigger", "titanic", "tomcat", "topgun", "toronto", "tracy", "travis", "trouble", "trucks", "trump", "trustno", "trustno1", "turtle", "united", "victoria", "video", "viper", "voodoo", "voyager", "walter", "warrior", "welcome", "welcome1", "welcome123", "whatever", "whatever1", "wildcats", "william", "willow", "wilson", "winner", "winston", "winter", "wizard", "wolf", "wolverine", "xavier", "xxxxxx", "xxxxxxxx", "yamaha", "yankees", "yellow", "yesyes", "zaq12wsx", "zaq1zaq1", "zephyr", "zombie", "zxc123", "zxcvbn", "zxcvbnm", "zxcvbnm123", "zzzzzz"].map(w => w.toLowerCase()));
+
+const LEET_MAP = { '@':'a', '4':'a', '3':'e', '1':'i', '!':'i', '0':'o', '$':'s', '5':'s', '7':'t' };
+function normalizeLeet(pw) {
+  return pw.toLowerCase().split('').map(ch => LEET_MAP[ch] !== undefined ? LEET_MAP[ch] : ch).join('');
+}
+
+const KEYBOARD_ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm', '1234567890'];
+
+function detectPatterns(pw) {
+  const found = [];
+  const lower = pw.toLowerCase();
+
+  if (/(.)\1\1/.test(lower)) {
+    found.push("repeated characters (e.g. 'aaa')");
+  }
+
+  for (let i = 0; i < lower.length - 2; i++) {
+    const a = lower.charCodeAt(i), b = lower.charCodeAt(i+1), c = lower.charCodeAt(i+2);
+    const aC = lower[i], bC = lower[i+1], cC = lower[i+2];
+    const alnum = ch => /[a-z0-9]/.test(ch);
+    if (alnum(aC) && alnum(bC) && alnum(cC)) {
+      if (b - a === 1 && c - b === 1) { found.push("sequential characters (e.g. 'abc', '123')"); break; }
+      if (a - b === 1 && b - c === 1) { found.push("sequential characters (e.g. 'cba', '321')"); break; }
+    }
+  }
+
+  outer:
+  for (const row of KEYBOARD_ROWS) {
+    for (let i = 0; i < row.length - 3; i++) {
+      const chunk = row.slice(i, i + 4);
+      const rev = chunk.split('').reverse().join('');
+      if (lower.includes(chunk) || lower.includes(rev)) {
+        found.push(`keyboard pattern (e.g. '${chunk}')`);
+        break outer;
+      }
+    }
+  }
+
+  return found;
+}
+
+function calcEntropy(pw) {
+  let pool = 0;
+  if (/[a-z]/.test(pw)) pool += 26;
+  if (/[A-Z]/.test(pw)) pool += 26;
+  if (/[0-9]/.test(pw)) pool += 10;
+  if (/[^a-zA-Z0-9]/.test(pw)) pool += 32;
+  if (pool === 0) return 0;
+  return pw.length * Math.log2(pool);
+}
+
+async function sha1Hex(str) {
+  const enc = new TextEncoder().encode(str);
+  const buf = await crypto.subtle.digest('SHA-1', enc);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+}
+
+async function checkPwned(pw) {
+  try {
+    const hash = await sha1Hex(pw);
+    const prefix = hash.slice(0, 5);
+    const suffix = hash.slice(5);
+    const res = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`);
+    if (!res.ok) return null;
+    const body = await res.text();
+    for (const line of body.split('\n')) {
+      const [sfx, count] = line.trim().split(':');
+      if (sfx === suffix) return parseInt(count, 10);
+    }
+    return 0;
+  } catch (e) {
+    return null;
+  }
+}
+
+function scorePassword(pw, pwnedCount) {
+  if (pwnedCount !== null && pwnedCount > 0) {
+    return {
+      score: 0, label: 'Very Weak',
+      feedback: [`This password has appeared in ${pwnedCount.toLocaleString()} known data breaches.`],
+      entropy: Math.round(calcEntropy(pw) * 10) / 10,
+      patterns: []
+    };
+  }
+
+  const normalized = normalizeLeet(pw);
+  if (COMMON_PASSWORDS.has(pw.toLowerCase()) || COMMON_PASSWORDS.has(normalized)) {
+    return {
+      score: 0, label: 'Very Weak',
+      feedback: ['This password is widely known and easily guessed (including leetspeak variants).'],
+      entropy: Math.round(calcEntropy(pw) * 10) / 10,
+      patterns: []
+    };
+  }
+
+  const feedback = [];
+  let score = 0;
+  const len = pw.length;
+
+  if (len >= 8) score += 1; else feedback.push('Use at least 8 characters.');
+  if (len >= 12) score += 1; else feedback.push('Consider 12+ characters for stronger protection.');
+
+  const hasLower = /[a-z]/.test(pw);
+  const hasUpper = /[A-Z]/.test(pw);
+  const hasDigit = /[0-9]/.test(pw);
+  const hasSpecial = /[^a-zA-Z0-9]/.test(pw);
+  const variety = [hasLower, hasUpper, hasDigit, hasSpecial].filter(Boolean).length;
+
+  if (variety >= 3) score += 1;
+  if (variety === 4) score += 1;
+
+  if (!hasUpper) feedback.push('Add an uppercase letter.');
+  if (!hasLower) feedback.push('Add a lowercase letter.');
+  if (!hasDigit) feedback.push('Add a number.');
+  if (!hasSpecial) feedback.push('Add a special character (e.g. ! @ # $ %).');
+
+  score += 1;
+  score = Math.min(score, 5);
+
+  const patterns = detectPatterns(pw);
+  if (patterns.length) {
+    score = Math.max(0, score - 1);
+    feedback.push('Avoid predictable patterns: ' + patterns.join('; ') + '.');
+  }
+
+  if (pwnedCount === 0) {
+    feedback.push('Not found in known breaches (checked via Have I Been Pwned).');
+  }
+
+  if (score === 5 && feedback.length === 0) {
+    feedback.push('Strong password.');
+  }
+
+  const labels = {0:'Very Weak',1:'Weak',2:'Fair',3:'Good',4:'Strong',5:'Very Strong'};
+  return { score, label: labels[score], feedback, entropy: Math.round(calcEntropy(pw)*10)/10, patterns };
+}
+
+const form = document.getElementById('pwForm');
+const input = document.getElementById('pwInput');
+const output = document.getElementById('output');
+const runBtn = document.getElementById('runBtn');
+const toggleVis = document.getElementById('toggleVis');
+
+toggleVis.addEventListener('click', () => {
+  const showing = input.type === 'text';
+  input.type = showing ? 'password' : 'text';
+  toggleVis.textContent = showing ? 'show' : 'hide';
+});
+
+function scoreClass(score) { return `s-${score}`; }
+
+function renderResult(pw, result, pwnedStatus) {
+  const block = document.createElement('div');
+  block.className = 'result-block';
+
+  const bar = '#'.repeat(result.score) + '-'.repeat(5 - result.score);
+
+  let html = '';
+  html += `<div class="line strength-row"><span class="muted">Strength:</span> <span class="strength-label ${scoreClass(result.score)}">${result.label}</span></div>`;
+  html += `<div class="line bar ${scoreClass(result.score)}">[${bar}] ${result.score}/5</div>`;
+  html += `<div class="line muted">Estimated entropy: ${result.entropy} bits</div>`;
+
+  if (pwnedStatus === 'error') {
+    html += `<div class="line breach-unknown">Breach check: could not reach Have I Been Pwned (offline results only).</div>`;
+  }
+
+  if (result.feedback.length) {
+    html += `<div class="suggestions">`;
+    result.feedback.forEach(f => { html += `<div class="line">${escapeHtml(f)}</div>`; });
+    html += `</div>`;
+  }
+
+  block.innerHTML = html;
+
+  const lines = block.querySelectorAll('.line');
+  lines.forEach((el, i) => { el.style.animationDelay = `${i * 45}ms`; });
+
+  output.prepend(block);
+}
+
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const pw = input.value;
+  if (!pw) return;
+
+  runBtn.disabled = true;
+  runBtn.textContent = 'Checking...';
+
+  let pwnedCount = null;
+  let pwnedStatus = 'ok';
+  try {
+    pwnedCount = await checkPwned(pw);
+    if (pwnedCount === null) pwnedStatus = 'error';
+  } catch (e) {
+    pwnedStatus = 'error';
+  }
+
+  const result = scorePassword(pw, pwnedCount);
+  renderResult(pw, result, pwnedStatus);
+
+  runBtn.disabled = false;
+  runBtn.textContent = 'Check';
+  input.value = '';
+  input.focus();
+});
+</script>
+</body>
+</html>
