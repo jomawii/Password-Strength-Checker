@@ -33,7 +33,7 @@
 
 Scores a password from 0 (Very Weak) to 5 (Very Strong) based on length,
 character variety, predictable patterns, and whether it matches a
-wordlist of widely known weak passwords - with an optional real check
+wordlist of widely known weak passwords with an optional real check
 against billions of breached passwords via the Have I Been Pwned API.
 
 ## Features
@@ -43,11 +43,11 @@ against billions of breached passwords via the Have I Been Pwned API.
 - Detects leetspeak substitutions (`P@ssw0rd` is still caught as a variant of `password`)
 - Detects keyboard walks (`qwerty`, `asdf`), sequential runs (`abc`, `123`), and repeated characters (`aaa`)
 - Flags passwords against a 147-entry common-password wordlist
-- Optional real breach check via the Have I Been Pwned API (k-anonymity - see below)
-- Estimates entropy (bits of randomness) - see the note below on what this does and doesn't measure
+- Optional real breach check via the Have I Been Pwned API (k-anonymity see below)
+- Estimates entropy (bits of randomness) see the note below on what this does and doesn't measure
 - Batch mode: check a whole file of passwords at once with `--file`
 - Specific, actionable suggestions for improvement
-- Hidden password input (via `getpass`) - nothing is echoed to the terminal
+- Hidden password input (via `getpass`) nothing is echoed to the terminal
 - 20 unit tests covering scoring, pattern detection, and the breach check (network calls are mocked)
 - Falls back to a small built-in wordlist if `common_passwords.txt` isn't found, so the tool never breaks
 
@@ -118,7 +118,7 @@ Suggestions:
 
 If a password matches an entry in the wordlist (including leetspeak
 variants) or shows up in the breach check, it's scored **0** immediately,
-regardless of length or complexity - a common or breached password with
+regardless of length or complexity a common or breached password with
 symbols swapped in is still a common or breached password.
 
 ## The Breach Check (Have I Been Pwned)
@@ -135,7 +135,7 @@ sent anywhere:
 3. The API returns every breached hash suffix that starts with those 5 characters (often hundreds of matches)
 4. The full comparison happens locally on your machine
 
-The full password, and even the full hash, never leave your device -
+The full password, and even the full hash, never leave your device
 only a 5-character prefix that thousands of other hashes also share.
 Use `--no-pwned` to skip this and run the tool fully offline.
 
@@ -145,7 +145,7 @@ The entropy number this tool shows is a rough theoretical estimate, not a
 real measurement of how hard a password is to crack. It assumes
 characters were chosen randomly from whatever character types are
 detected (lowercase, uppercase, digits, symbols). Real human passwords
-aren't random - something like `Jomari123!` can score a decent
+aren't random something like `Jomari123!` can score a decent
 theoretical entropy here while still being predictable, since it follows
 a common pattern (name + number + symbol). Treat the entropy number as a
 loose signal alongside the score, not a guarantee of strength.
@@ -153,9 +153,9 @@ loose signal alongside the score, not a guarantee of strength.
 ## Security Notes
 
 - Password input uses `getpass`, so it's never displayed or echoed in the terminal
-- The password itself is only ever held in memory for the duration of the check - it is never written to disk or logged
-- The breach check only ever transmits a 5-character hash prefix, never the password or full hash (see above) - and it's entirely optional via `--no-pwned`
-- The wordlist check is case-insensitive and leetspeak-aware, but otherwise exact-match - it will not catch every variation of a weak password (see Limitations)
+- The password itself is only ever held in memory for the duration of the check it is never written to disk or logged
+- The breach check only ever transmits a 5-character hash prefix, never the password or full hash (see above) and it's entirely optional via `--no-pwned`
+- The wordlist check is case-insensitive and leetspeak-aware, but otherwise exact-match it will not catch every variation of a weak password (see Limitations)
 
 ## Running the Tests
 
@@ -177,10 +177,10 @@ python3 -m unittest test_password_checker.py -v
 ## Why I Built This
 
 I'm a cybersecurity student working toward becoming a Cloud Security
-Analyst. This project was practice applying real security concepts -
+Analyst. This project was practice applying real security concepts
 what actually makes a password resistant to guessing and brute-force
 attacks, and how k-anonymity lets you check a password against a breach
-database without exposing it - while building out my Python
+database without exposing it while building out my Python
 fundamentals and testing practices.
 
 ## Possible Future Improvements
