@@ -24,8 +24,6 @@ _FALLBACK_COMMON_PASSWORDS = {
     "password1", "111111", "letmein", "iloveyou", "admin",
 }
 
-# Common leetspeak substitutions, used to catch things like "P@ssw0rd"
-# matching "password" in the wordlist.
 LEET_MAP = str.maketrans({
     "@": "a", "4": "a",
     "3": "e",
