@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/-Python%203-000000?style=for-the-badge&logo=python&logoColor=white" />
   <img src="https://img.shields.io/badge/STATUS-FUNCTIONAL-white?style=for-the-badge&labelColor=000000&color=FFFFFF" />
   <img src="https://img.shields.io/badge/DEPENDENCIES-NONE-white?style=for-the-badge&labelColor=000000&color=FFFFFF" />
-  <img src="https://img.shields.io/badge/TESTS-18%20PASSING-white?style=for-the-badge&labelColor=000000&color=FFFFFF" />
+  <img src="https://img.shields.io/badge/TESTS-20%20PASSING-white?style=for-the-badge&labelColor=000000&color=FFFFFF" />
 </p>
 
 <p align="center">
@@ -48,7 +48,7 @@ against billions of breached passwords via the Have I Been Pwned API.
 - Batch mode: check a whole file of passwords at once with `--file`
 - Specific, actionable suggestions for improvement
 - Hidden password input (via `getpass`) - nothing is echoed to the terminal
-- 18 unit tests covering scoring, pattern detection, and the breach check (network calls are mocked)
+- 20 unit tests covering scoring, pattern detection, and the breach check (network calls are mocked)
 - Falls back to a small built-in wordlist if `common_passwords.txt` isn't found, so the tool never breaks
 
 ## Project Structure
@@ -75,6 +75,11 @@ Check a whole file of passwords at once (one per line):
 ```bash
 python3 password_checker.py --file passwords.txt
 ```
+
+> **Warning:** Never use real passwords or credentials in a batch file,
+> especially if that file might end up committed to this repo. Use
+> synthetic test passwords only. Add any local password test files to
+> `.gitignore` before creating them.
 
 Skip the online breach check and run fully offline:
 
@@ -113,7 +118,7 @@ Suggestions:
 
 If a password matches an entry in the wordlist (including leetspeak
 variants) or shows up in the breach check, it's scored **0** immediately,
-regardless of length or complexity a common or breached password with
+regardless of length or complexity - a common or breached password with
 symbols swapped in is still a common or breached password.
 
 ## The Breach Check (Have I Been Pwned)
@@ -148,13 +153,13 @@ loose signal alongside the score, not a guarantee of strength.
 ## Security Notes
 
 - Password input uses `getpass`, so it's never displayed or echoed in the terminal
-- The password itself is only ever held in memory for the duration of the check it is never written to disk or logged
+- The password itself is only ever held in memory for the duration of the check - it is never written to disk or logged
 - The breach check only ever transmits a 5-character hash prefix, never the password or full hash (see above) - and it's entirely optional via `--no-pwned`
-- The wordlist check is case-insensitive and leetspeak-aware, but otherwise exact-match it will not catch every variation of a weak password (see Limitations)
+- The wordlist check is case-insensitive and leetspeak-aware, but otherwise exact-match - it will not catch every variation of a weak password (see Limitations)
 
 ## Running the Tests
 
-The project includes 18 unit tests covering scoring logic, pattern
+The project includes 20 unit tests covering scoring logic, pattern
 detection, and the breach check (the network call is mocked, so tests
 run instantly with no internet required):
 
@@ -164,7 +169,7 @@ python3 -m unittest test_password_checker.py -v
 
 ## Limitations
 
-- The common-password wordlist has 147 entries useful for catching the most obvious weak passwords, but far smaller than the Have I Been Pwned database, which is why the breach check exists as a second layer
+- The common-password wordlist has 147 entries - useful for catching the most obvious weak passwords, but far smaller than the Have I Been Pwned database, which is why the breach check exists as a second layer
 - The breach check requires an internet connection; if it can't be reached, the tool says so and falls back to the offline checks only
 - Entropy is a theoretical estimate, not a measure of real-world guessability (see [above](#a-note-on-entropy))
 - Keyboard-walk detection only covers the standard QWERTY rows and number row, not every possible layout
@@ -172,10 +177,10 @@ python3 -m unittest test_password_checker.py -v
 ## Why I Built This
 
 I'm a cybersecurity student working toward becoming a Cloud Security
-Analyst. This project was practice applying real security concepts
+Analyst. This project was practice applying real security concepts -
 what actually makes a password resistant to guessing and brute-force
 attacks, and how k-anonymity lets you check a password against a breach
-database without exposing it while building out my Python
+database without exposing it - while building out my Python
 fundamentals and testing practices.
 
 ## Possible Future Improvements
