@@ -120,7 +120,7 @@ loose signal alongside the score, not a guarantee of strength.
 I'm a cybersecurity student working toward becoming a Cloud Security
 Analyst. This project was practice applying a real security concept —
 what actually makes a password resistant to guessing and brute-force
-attacks — while building out my Python fundamentals.
+attacks while building out my Python fundamentals.
 
 ## Possible Future Improvements
 
