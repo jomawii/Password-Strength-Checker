@@ -1,10 +1,3 @@
-"""
-Unit tests for password_checker.py
-
-Run with:
-    python3 -m unittest test_password_checker.py -v
-"""
-
 import unittest
 from unittest.mock import patch
 
