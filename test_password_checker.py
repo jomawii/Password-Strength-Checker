@@ -29,6 +29,10 @@ class TestDetectPatterns(unittest.TestCase):
         patterns = pc.detect_patterns("xyzabc123")
         self.assertTrue(any("sequential" in p for p in patterns))
 
+    def test_sequential_descending(self):
+        patterns = pc.detect_patterns("321zyx")
+        self.assertTrue(any("sequential" in p for p in patterns))
+
     def test_keyboard_walk(self):
         patterns = pc.detect_patterns("myqwertypass")
         self.assertTrue(any("keyboard" in p for p in patterns))
