@@ -1,27 +1,40 @@
 """
-Author: Jomawii
+Password Strength Checker
+
+Evaluates password strength based on length, character variety, and
+common weak-password patterns. Runs entirely LOCALLY.
+
+Author: Jomari Miranda
 """
 
 import re
 import math
+import os
 
-COMMON_PASSWORDS = {
+# Small built-in fallback just in case common_passwords.txt is missing or unreadable.
+_FALLBACK_COMMON_PASSWORDS = {
     "password", "123456", "12345678", "qwerty", "abc123",
     "password1", "111111", "letmein", "iloveyou", "admin",
-    "welcome", "monkey", "dragon", "football", "123123",
 }
 
 
-def calculate_entropy(password: str) -> float:
-    """
-    Rough theoretical entropy estimate, NOT a real crack-time measurement teehee.
+def load_common_passwords() -> set:
+    """Load the common-password wordlist from common_passwords.txt.
+    Falls back to a small built-in list if the file is missing """
+    wordlist_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "common_passwords.txt")
+    try:
+        with open(wordlist_path, "r", encoding="utf-8") as f:
+            return {line.strip().lower() for line in f if line.strip()}
+    except OSError:
+        return _FALLBACK_COMMON_PASSWORDS
 
-    This assumes characters were chosen randomly from the detected
-    character pool. Real human passwords aint random smth like
-    "Jomari123!" can score a decent theoretical entropy here while still
-    being predictable (name + common number pattern + common symbol)
-    Treat this number as a loose signal, not a guarantee of strength.
-    """
+
+COMMON_PASSWORDS = load_common_passwords()
+
+
+def calculate_entropy(password: str) -> float:
+    """Estimate password entropy in bits based on detected character pool size.
+    This is a THEORETICAL estimate that assumes random character selection. """
     pool_size = 0
     if re.search(r"[a-z]", password):
         pool_size += 26
@@ -40,26 +53,19 @@ def calculate_entropy(password: str) -> float:
 
 def check_password_strength(password: str) -> dict:
     """
-    Score breakdown (max 5 points total):
-      - length >= 8:  +1
-      - length >= 12: +1
-      - variety >= 3 character types: +1
-      - variety == 4 character types: +1
-      - not a known common password: +1 (only point, not stacked per-feedback-item)
+    Score a password from 0-5.
     """
-    feedback = []
-    score = 0
-
-    # Common password check 1st
     if password.lower() in COMMON_PASSWORDS:
         return {
             "score": 0,
             "label": "Very Weak",
-            "feedback": ["ts is weak and is common"],
+            "feedback": ["This password is widely known and easily guessed."],
             "entropy": round(calculate_entropy(password), 1),
         }
 
-    # Length
+    feedback = []
+    score = 0
+
     length = len(password)
     if length >= 8:
         score += 1
@@ -70,7 +76,6 @@ def check_password_strength(password: str) -> dict:
     else:
         feedback.append("Consider 12+ characters for stronger protection.")
 
-    # check variety type shi
     has_lower = bool(re.search(r"[a-z]", password))
     has_upper = bool(re.search(r"[A-Z]", password))
     has_digit = bool(re.search(r"[0-9]", password))
@@ -91,13 +96,11 @@ def check_password_strength(password: str) -> dict:
     if not has_special:
         feedback.append("Add a special character (e.g. ! @ # $ %).")
 
-    # bonus point for not being a common password
-    score += 1
-
-    score = max(0, min(score, 5))
+    score += 1  # not a known common password
+    score = min(score, 5)
 
     if score == 5 and not feedback:
-        feedback.append("Strong password wowee")
+        feedback.append("Strong password.")
 
     labels = {
         0: "Very Weak",
@@ -117,7 +120,7 @@ def check_password_strength(password: str) -> dict:
 
 
 def print_bar(score: int, max_score: int = 5) -> None:
-    """Print a simple visual strength bar in the terminal."""
+    """Print a visual strength bar in the terminal."""
     filled = "#" * score
     empty = "-" * (max_score - score)
     print(f"[{filled}{empty}] {score}/{max_score}")
@@ -153,4 +156,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
