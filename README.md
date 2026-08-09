@@ -106,12 +106,12 @@ loose signal alongside the score, not a guarantee of strength.
 ## Security Notes
 
 - Password input uses `getpass`, so it's never displayed or echoed in the terminal
-- The password is only ever held in memory for the duration of the check — it is never written to disk, logged, or transmitted over a network
-- The wordlist check is case-insensitive but otherwise exact-match — it will not catch every variation of a weak password (see Limitations)
+- The password is only ever held in memory for the duration of the check it is never written to disk, logged, or transmitted over a network
+- The wordlist check is case-insensitive but otherwise exact-match it will not catch every variation of a weak password (see Limitations)
 
 ## Limitations
 
-- The common-password wordlist has 147 entries — useful for catching the most obvious weak passwords, but far smaller than real-world breached-password databases with millions of entries
+- The common-password wordlist has 147 entries useful for catching the most obvious weak passwords, but far smaller than real-world breached-password databases with millions of entries
 - Entropy is a theoretical estimate, not a measure of real-world guessability (see [above](#a-note-on-entropy))
 - No check for patterns like keyboard walks (`qwertyasdf`) or personal information (birthdays, names) beyond what's in the wordlist
 
