@@ -67,8 +67,9 @@ class TestCheckPasswordStrength(unittest.TestCase):
         self.assertEqual(result["label"], "Very Strong")
 
     def test_keyboard_walk_reduces_score(self):
-        with_pattern = pc.check_password_strength("Qwerty123!ABC")
-        self.assertTrue(len(with_pattern["patterns"]) > 0)
+        result = pc.check_password_strength("Qwerty123!ABC")
+        self.assertTrue(len(result["patterns"]) > 0)
+        self.assertLess(result["score"], 5)
 
     def test_pwned_count_forces_zero_score(self):
         result = pc.check_password_strength("xK9$mQ2vL#pR", pwned_count=42)
@@ -80,12 +81,26 @@ class TestCheckPasswordStrength(unittest.TestCase):
         self.assertTrue(any("8 characters" in f for f in result["feedback"]))
 
 
+class TestOfflineMode(unittest.TestCase):
+    @patch("password_checker.check_pwned")
+    def test_no_pwned_check_when_disabled(self, mock_check_pwned):
+        # check_password_strength itself never calls check_pwned - it's print_result
+        # that decides whether to make the API call, so that's what we test here.
+        import io
+        import contextlib
+
+        with contextlib.redirect_stdout(io.StringIO()):
+            pc.print_result("xK9$mQ2vL#pR", use_pwned=False)
+
+        mock_check_pwned.assert_not_called()
+
+
 class TestCheckPwned(unittest.TestCase):
     @patch("password_checker.urllib.request.urlopen")
     def test_password_found_in_breach(self, mock_urlopen):
         # Simulate an API response containing our password's hash suffix
         import hashlib
-        test_password = "testpassword123"
+        test_password = "TEST_ONLY_password_123!"
         sha1 = hashlib.sha1(test_password.encode("utf-8")).hexdigest().upper()
         suffix = sha1[5:]
 
