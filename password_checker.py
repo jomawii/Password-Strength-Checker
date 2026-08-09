@@ -1,17 +1,10 @@
 """
-Password Strength Checker
---------------------------
-A simple command-line tool that evaluates password strength based on
-length, character variety, and common weak-password patterns.
-
-Author: Jomari Miranda
+Author: Jomawii
 """
 
 import re
 import math
 
-# A small sample of extremely common passwords to flag immediately.
-# (A real-world tool would check against a much larger breached-password list.)
 COMMON_PASSWORDS = {
     "password", "123456", "12345678", "qwerty", "abc123",
     "password1", "111111", "letmein", "iloveyou", "admin",
@@ -20,7 +13,6 @@ COMMON_PASSWORDS = {
 
 
 def calculate_entropy(password: str) -> float:
-    """Estimate password entropy in bits based on character pool size."""
     pool_size = 0
     if re.search(r"[a-z]", password):
         pool_size += 26
@@ -29,7 +21,7 @@ def calculate_entropy(password: str) -> float:
     if re.search(r"[0-9]", password):
         pool_size += 10
     if re.search(r"[^a-zA-Z0-9]", password):
-        pool_size += 32  # rough estimate for common special characters
+        pool_size += 32  
 
     if pool_size == 0:
         return 0.0
@@ -38,17 +30,10 @@ def calculate_entropy(password: str) -> float:
 
 
 def check_password_strength(password: str) -> dict:
-    """
-    Analyze a password and return a dict with:
-      - score: 0-5
-      - label: text description
-      - feedback: list of suggestions
-      - entropy: estimated bits of entropy
-    """
     feedback = []
     score = 0
 
-    # Length checks
+    
     length = len(password)
     if length >= 8:
         score += 1
@@ -59,7 +44,7 @@ def check_password_strength(password: str) -> dict:
     else:
         feedback.append("Consider 12+ characters for stronger protection.")
 
-    # Character variety checks
+    # check variety type shi
     has_lower = bool(re.search(r"[a-z]", password))
     has_upper = bool(re.search(r"[A-Z]", password))
     has_digit = bool(re.search(r"[0-9]", password))
@@ -83,11 +68,11 @@ def check_password_strength(password: str) -> dict:
     # Common password check
     if password.lower() in COMMON_PASSWORDS:
         score = 0
-        feedback = ["This is a widely known weak password. Choose something unique."]
+        feedback = ["ts is weak and is common"]
     elif score == 5 and not feedback:
-        feedback.append("Strong password. Nice work.")
+        feedback.append("Strong password wowee")
     else:
-        score += 1  # bonus point for not being a common password
+        score += 1  
 
     score = max(0, min(score, 5))
 
