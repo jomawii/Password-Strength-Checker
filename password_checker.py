@@ -1,10 +1,5 @@
 """
 Password Strength Checker
-
-Evaluates password strength based on length, character variety, common
-weak-password patterns, keyboard-walk/repeated-character patterns, and
-(optionally) a real breach database via the Have I Been Pwned API.
-
 Author: Jomari Miranda
 """
 
@@ -18,7 +13,7 @@ import urllib.request
 import urllib.error
 from getpass import getpass
 
-# Small built-in fallback just in case common_passwords.txt is missing or unreadable.
+# backup list in case common_passwords.txt isn't found
 _FALLBACK_COMMON_PASSWORDS = {
     "password", "123456", "12345678", "qwerty", "abc123",
     "password1", "111111", "letmein", "iloveyou", "admin",
@@ -41,9 +36,7 @@ KEYBOARD_ROWS = [
 ]
 
 
-def load_common_passwords() -> set:
-    """Load the common-password wordlist from common_passwords.txt.
-    Falls back to a small built-in list if the file is missing """
+def load_common_passwords():
     wordlist_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "common_passwords.txt")
     try:
         with open(wordlist_path, "r", encoding="utf-8") as f:
@@ -55,14 +48,13 @@ def load_common_passwords() -> set:
 COMMON_PASSWORDS = load_common_passwords()
 
 
-def normalize_leetspeak(password: str) -> str:
-    """Convert common leetspeak substitutions back to plain letters."""
+def normalize_leetspeak(password):
+    # turns stuff like P@ssw0rd into password so it still matches the wordlist
     return password.lower().translate(LEET_MAP)
 
 
-def calculate_entropy(password: str) -> float:
-    """Estimate password entropy in bits based on detected character pool size.
-    This is a THEORETICAL estimate that assumes random character selection. """
+def calculate_entropy(password):
+    # theoretical only, assumes random chars which real passwords usually aren't
     pool_size = 0
     if re.search(r"[a-z]", password):
         pool_size += 26
@@ -79,17 +71,13 @@ def calculate_entropy(password: str) -> float:
     return len(password) * math.log2(pool_size)
 
 
-def detect_patterns(password: str) -> list:
-    """Detect keyboard walks and repeated/sequential character runs.
-    Returns a list of human-readable descriptions of what was found."""
+def detect_patterns(password):
     found = []
     lower = password.lower()
 
-    # Repeated character runs, e.g. "aaa", "111"
     if re.search(r"(.)\1\1", lower):
         found.append("repeated characters (e.g. 'aaa')")
 
-    # Sequential ascending/descending runs of 3+, e.g. "abc", "321"
     for i in range(len(lower) - 2):
         a, b, c = lower[i], lower[i + 1], lower[i + 2]
         if a.isalnum() and b.isalnum() and c.isalnum():
@@ -100,7 +88,6 @@ def detect_patterns(password: str) -> list:
                 found.append("sequential characters (e.g. 'cba', '321')")
                 break
 
-    # Keyboard walks, e.g. "qwerty", "asdf"
     for row in KEYBOARD_ROWS:
         for i in range(len(row) - 3):
             chunk = row[i:i + 4]
@@ -111,17 +98,9 @@ def detect_patterns(password: str) -> list:
     return found
 
 
-def check_pwned(password: str, timeout: float = 3.0):
-    """
-    Check a password against the Have I Been Pwned breach database using
-    k-anonymity: only the first 5 characters of the password's SHA-1 hash
-    are sent over the network. The full password and full hash never
-    leave this machine.
-
-    Returns:
-        int   - number of times this password has appeared in known breaches
-        None  - if the check couldn't be completed (no internet, API error, etc.)
-    """
+def check_pwned(password, timeout=3.0):
+    # k-anonymity check against HIBP - only sends first 5 chars of the sha1 hash,
+    # so the real password/hash never leaves the machine
     sha1 = hashlib.sha1(password.encode("utf-8")).hexdigest().upper()
     prefix, suffix = sha1[:5], sha1[5:]
 
@@ -140,14 +119,7 @@ def check_pwned(password: str, timeout: float = 3.0):
     return 0
 
 
-def check_password_strength(password: str, pwned_count=None) -> dict:
-    """
-    Score a password from 0-5.
-
-    If pwned_count is provided and greater than 0, the password is scored
-    0 immediately, same as a wordlist match - a breached password is
-    compromised regardless of how "complex" it looks.
-    """
+def check_password_strength(password, pwned_count=None):
     if pwned_count is not None and pwned_count > 0:
         return {
             "score": 0,
@@ -232,14 +204,13 @@ def check_password_strength(password: str, pwned_count=None) -> dict:
     }
 
 
-def print_bar(score: int, max_score: int = 5) -> None:
-    """Print a visual strength bar in the terminal."""
+def print_bar(score, max_score=5):
     filled = "#" * score
     empty = "-" * (max_score - score)
     print(f"[{filled}{empty}] {score}/{max_score}")
 
 
-def print_result(password: str, use_pwned: bool, label: str = None) -> dict:
+def print_result(password, use_pwned, label=None):
     pwned_count = check_pwned(password) if use_pwned else None
     result = check_password_strength(password, pwned_count=pwned_count)
 
@@ -261,7 +232,7 @@ def print_result(password: str, use_pwned: bool, label: str = None) -> dict:
     return result
 
 
-def run_batch(file_path: str, use_pwned: bool) -> None:
+def run_batch(file_path, use_pwned):
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             passwords = [line.rstrip("\n") for line in f if line.strip()]
@@ -276,8 +247,8 @@ def run_batch(file_path: str, use_pwned: bool) -> None:
 
 def main():
     parser = argparse.ArgumentParser(description="Password Strength Checker")
-    parser.add_argument("--file", metavar="PATH", help="Check a list of passwords from a text file (one per line) instead of interactive input")
-    parser.add_argument("--no-pwned", action="store_true", help="Skip the Have I Been Pwned breach check (fully offline mode)")
+    parser.add_argument("--file", metavar="PATH", help="check a list of passwords from a text file instead of typing one in")
+    parser.add_argument("--no-pwned", action="store_true", help="skip the breach check, run fully offline")
     args = parser.parse_args()
 
     use_pwned = not args.no_pwned
@@ -310,3 +281,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
