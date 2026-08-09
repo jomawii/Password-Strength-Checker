@@ -31,7 +31,7 @@
 
 Scores a password from 0 (Very Weak) to 5 (Very Strong) based on length,
 character variety, and whether it matches a wordlist of widely known weak
-passwords. Runs entirely locally — nothing is stored, logged, or sent
+passwords. Runs entirely locally nothing is stored, logged, or sent
 anywhere.
 
 ## Features
@@ -118,7 +118,7 @@ loose signal alongside the score, not a guarantee of strength.
 ## Why I Built This
 
 I'm a cybersecurity student working toward becoming a Cloud Security
-Analyst. This project was practice applying a real security concept —
+Analyst. This project was practice applying a real security concept
 what actually makes a password resistant to guessing and brute-force
 attacks while building out my Python fundamentals.
 
