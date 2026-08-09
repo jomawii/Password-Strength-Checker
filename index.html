@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>password_checker.py -- web edition</title>
-<meta name="description" content="Browser version of a Python CLI password strength checker. Checks length, character variety, pattern detection, entropy, and real breach data via Have I Been Pwned.">
+<title>password checker</title>
 <style>
   :root {
     --bg: #050505;
@@ -19,18 +18,12 @@
 
   * { box-sizing: border-box; }
 
-  @font-face {
-    font-family: 'JBM';
-    src: local('JetBrains Mono');
-  }
-
   html, body {
     margin: 0;
     padding: 0;
     background: var(--bg);
     color: var(--fg);
-    font-family: 'JetBrains Mono', 'JBM', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    -webkit-font-smoothing: antialiased;
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   }
 
   body {
@@ -231,16 +224,11 @@
   }
   footer a { color: var(--muted); }
   footer a:hover { color: var(--fg); }
-
-  @media (prefers-reduced-motion: reduce) {
-    .cursor { animation: none; opacity: 1; }
-    .result-block, .result-block .line { animation: none; opacity: 1; }
-  }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="backlink" href="https://github.com/jomawii/password-strength-checker">back to source (GitHub)</a>
+  <a class="backlink" href="https://github.com/jomawii/password-strength-checker">back to source</a>
 
   <div class="terminal">
     <div class="titlebar">
@@ -250,28 +238,28 @@
     <div class="screen">
       <div class="intro">
         <div class="line muted">$ whoami</div>
-        <div class="line">&gt; Password Strength Checker <span class="muted">(web edition)</span></div>
-        <div class="line muted" style="margin-top:8px;">Nothing you type here is stored, logged, or sent anywhere</div>
-        <div class="line muted">except an optional 5-character hash prefix, for the breach check below.</div>
+        <div class="line">&gt; Password Strength Checker</div>
+        <div class="line muted" style="margin-top:8px;">nothing you type here gets saved or sent anywhere,</div>
+        <div class="line muted">except a 5-char hash prefix for the breach check below</div>
       </div>
 
       <form id="pwForm" autocomplete="off">
         <div class="prompt-row">
           <span class="prompt-sym">$</span>
-          <input type="password" id="pwInput" placeholder="type a password to check" aria-label="Password to check" />
-          <button type="button" class="icon-btn" id="toggleVis" aria-label="Show password">show</button>
+          <input type="password" id="pwInput" placeholder="type a password to check" />
+          <button type="button" class="icon-btn" id="toggleVis">show</button>
         </div>
         <button type="submit" class="run" id="runBtn">Check</button>
       </form>
-      <div class="hint">Runs the same checks as the CLI: length, variety, patterns, leetspeak, wordlist, entropy, and a live breach check.</div>
+      <div class="hint">same checks as the CLI version: length, variety, patterns, leetspeak, wordlist, entropy, breach check</div>
 
       <div id="output"></div>
     </div>
   </div>
 
   <footer>
-    Same logic as the Python CLI version -- <a href="https://github.com/jomawii/password-strength-checker">source + tests on GitHub</a><br>
-    Breach check via <a href="https://haveibeenpwned.com/">Have I Been Pwned</a> (k-anonymity -- your password never leaves this page)
+    same logic as the python version -- <a href="https://github.com/jomawii/password-strength-checker">source on github</a><br>
+    breach check via <a href="https://haveibeenpwned.com/">Have I Been Pwned</a>, uses k-anonymity so your password stays local
   </footer>
 </div>
 
