@@ -39,9 +39,9 @@ anywhere.
 - Strength score (0-5) with a visual bar
 - Checks for uppercase, lowercase, numbers, and special characters
 - Flags passwords against a 147-entry common-password wordlist
-- Estimates entropy (bits of randomness) — see the note below on what this does and doesn't measure
+- Estimates entropy (bits of randomness) see the note below on what this does and doesn't measure
 - Specific, actionable suggestions for improvement
-- Hidden password input (via `getpass`) — nothing is echoed to the terminal
+- Hidden password input (via `getpass`) nothing is echoed to the terminal
 - Falls back to a small built-in wordlist if `common_passwords.txt` isn't found, so the tool never breaks
 
 ## Project Structure
@@ -98,7 +98,7 @@ The entropy number this tool shows is a rough theoretical estimate, not a
 real measurement of how hard a password is to crack. It assumes
 characters were chosen randomly from whatever character types are
 detected (lowercase, uppercase, digits, symbols). Real human passwords
-aren't random — something like `Jomari123!` can score a decent
+aren't random something like `Jomari123!` can score a decent
 theoretical entropy here while still being predictable, since it follows
 a common pattern (name + number + symbol). Treat the entropy number as a
 loose signal alongside the score, not a guarantee of strength.
