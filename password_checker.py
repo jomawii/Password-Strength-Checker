@@ -10,6 +10,7 @@ Author: Jomari Miranda
 import re
 import math
 import os
+from getpass import getpass
 
 # Small built-in fallback just in case common_passwords.txt is missing or unreadable.
 _FALLBACK_COMMON_PASSWORDS = {
@@ -133,7 +134,7 @@ def main():
     print("Your password is not stored or transmitted anywhere.\n")
 
     try:
-        password = input("Enter a password to check: ")
+        password = getpass("Enter a password to check: ")
     except (EOFError, KeyboardInterrupt):
         print("\nNo input received. Exiting.")
         return
